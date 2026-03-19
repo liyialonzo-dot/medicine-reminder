@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8" />
@@ -82,9 +82,7 @@
       font-weight: 700;
       letter-spacing: 1px;
     }
-    .muted {
-      color: var(--muted);
-    }
+    .muted { color: var(--muted); }
     .btn {
       border: none;
       border-radius: 12px;
@@ -231,10 +229,6 @@
     const streakText = document.getElementById("streakText");
     const reminder = document.getElementById("reminder");
 
-    function dateFromKey(key) {
-      const [y, m, d] = key.split("-").map(Number);
-      return new Date(y, m - 1, d);
-    }
     function addDays(date, n) {
       const d = new Date(date);
       d.setDate(d.getDate() + n);
@@ -323,7 +317,6 @@
 
     function showReminder() {
       reminder.classList.add("show");
-      // 尝试触发震动（部分手机/微信可能不支持）
       if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
     }
 
