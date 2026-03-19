@@ -3,25 +3,27 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>每日吃药提醒</title>
+  <title>李昳的吃药提醒</title>
   <style>
     :root {
-      --bg1: #f6f2ea;
-      --bg2: #f2e8d8;
-      --ink: #1f1a14;
-      --muted: #6b5f52;
-      --accent: #c84b31;
-      --accent-2: #2a9d8f;
-      --card: #fffaf2;
-      --line: #e6d8c6;
-      --shadow: 0 10px 30px rgba(40, 30, 20, 0.12);
+      --bg: #f7f3ee;
+      --ink: #2f2a25;
+      --muted: #7a6f64;
+      --accent: #c86a5a;
+      --accent-2: #7aa39a;
+      --card: #fffdf8;
+      --line: #e9dfd3;
+      --shadow: 0 14px 32px rgba(55, 45, 35, 0.12);
+      --paper: rgba(0, 0, 0, 0.03);
     }
     * { box-sizing: border-box; }
     body {
       margin: 0;
-      font-family: "Noto Serif SC", "Source Han Serif SC", "STSong", serif;
+      font-family: "Shippori Mincho", "Noto Serif SC", "Songti SC", "STSong", serif;
       color: var(--ink);
-      background: radial-gradient(1200px 600px at 20% -10%, #fff7ea 0%, #f7ecd9 55%, #f2e4cf 100%);
+      background:
+        radial-gradient(900px 600px at 80% -10%, #fffaf2 0%, #f7efe4 60%, #f2e9dc 100%),
+        repeating-linear-gradient(135deg, transparent 0 12px, var(--paper) 12px 13px);
     }
     .wrap {
       max-width: 980px;
@@ -50,6 +52,17 @@
       padding: 18px;
       display: grid;
       gap: 14px;
+      position: relative;
+      overflow: hidden;
+    }
+    .panel::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(220px 160px at 90% 10%, rgba(200, 160, 140, 0.12), transparent 70%),
+        radial-gradient(240px 160px at 10% 90%, rgba(140, 180, 170, 0.12), transparent 70%);
+      pointer-events: none;
     }
     .row {
       display: flex;
@@ -59,10 +72,10 @@
     }
     .tag {
       padding: 6px 10px;
-      background: #efe3d1;
+      background: #efe7dc;
       border-radius: 999px;
       font-size: 13px;
-      color: #5b4a3c;
+      color: #6a5a4d;
     }
     .big {
       font-size: 36px;
@@ -112,9 +125,9 @@
       display: none;
       padding: 12px 14px;
       border-radius: 12px;
-      background: #ffe7db;
-      border: 1px solid #f6c9b5;
-      color: #7a2e1f;
+      background: #fdebe4;
+      border: 1px solid #f2c8bb;
+      color: #7a3a2f;
       font-weight: 600;
     }
     .banner.show { display: block; }
@@ -141,12 +154,12 @@
 <body>
   <div class="wrap">
     <header>
-      <h1>每日吃药提醒</h1>
-      <div class="sub">每天中午 12:00 提醒 · 点一下“已吃”就会记录到历史</div>
+      <h1>李昳的吃药提醒</h1>
+      <div class="sub">每天中午 12:00 的一份温柔提醒 · 轻点“已吃”即可留下今日记录</div>
     </header>
 
     <div class="panel">
-      <div id="reminder" class="banner">提醒：今天中午的药还没记录，记得吃完点“已吃”。</div>
+      <div id="reminder" class="banner">提醒：今天中午的药还没记录，吃完后点一下“已吃”。</div>
 
       <div class="row">
         <div class="tag" id="todayTag">今天</div>
@@ -165,8 +178,12 @@
           <div id="timeText">—</div>
         </div>
         <div>
+          <div class="muted">连续打卡</div>
+          <div id="streakText">0 天</div>
+        </div>
+        <div>
           <div class="muted">提醒时间</div>
-          <div>每天 12:00</div>
+          <div>每天 12:00 · 一天一小步，身体更安心</div>
         </div>
         <div>
           <div class="muted">历史记录（最近 30 天）</div>
@@ -177,7 +194,7 @@
       </div>
 
       <div class="notice">
-        小提示：建议把本页面收藏到微信里（或添加到手机桌面）。提醒是页面打开时自动触发的。
+        小提示：建议把本页面收藏到微信（或添加到手机桌面）。打开页面后会自动提示，点一下就记下今天的自己。
       </div>
     </div>
 
@@ -211,7 +228,35 @@
     const statusText = document.getElementById("statusText");
     const timeText = document.getElementById("timeText");
     const historyList = document.getElementById("historyList");
+    const streakText = document.getElementById("streakText");
     const reminder = document.getElementById("reminder");
+
+    function dateFromKey(key) {
+      const [y, m, d] = key.split("-").map(Number);
+      return new Date(y, m - 1, d);
+    }
+    function addDays(date, n) {
+      const d = new Date(date);
+      d.setDate(d.getDate() + n);
+      return d;
+    }
+    function calcStreak(records) {
+      const keys = Object.keys(records);
+      if (keys.length === 0) return 0;
+      const set = new Set(keys);
+      let streak = 0;
+      let cursor = new Date();
+      while (true) {
+        const key = formatDate(cursor);
+        if (set.has(key)) {
+          streak += 1;
+          cursor = addDays(cursor, -1);
+        } else {
+          break;
+        }
+      }
+      return streak;
+    }
 
     function updateUI() {
       const records = loadRecords();
@@ -242,6 +287,9 @@
           historyList.appendChild(li);
         });
       }
+
+      const streak = calcStreak(records);
+      streakText.textContent = `${streak} 天`;
     }
 
     function markToday() {
