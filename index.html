@@ -1,0 +1,315 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>每日吃药提醒</title>
+  <style>
+    :root {
+      --bg1: #f6f2ea;
+      --bg2: #f2e8d8;
+      --ink: #1f1a14;
+      --muted: #6b5f52;
+      --accent: #c84b31;
+      --accent-2: #2a9d8f;
+      --card: #fffaf2;
+      --line: #e6d8c6;
+      --shadow: 0 10px 30px rgba(40, 30, 20, 0.12);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Noto Serif SC", "Source Han Serif SC", "STSong", serif;
+      color: var(--ink);
+      background: radial-gradient(1200px 600px at 20% -10%, #fff7ea 0%, #f7ecd9 55%, #f2e4cf 100%);
+    }
+    .wrap {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 28px 18px 40px;
+    }
+    header {
+      display: grid;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+    h1 {
+      font-size: 30px;
+      margin: 0;
+      letter-spacing: 1px;
+    }
+    .sub {
+      color: var(--muted);
+      font-size: 15px;
+    }
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      padding: 18px;
+      display: grid;
+      gap: 14px;
+    }
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+    }
+    .tag {
+      padding: 6px 10px;
+      background: #efe3d1;
+      border-radius: 999px;
+      font-size: 13px;
+      color: #5b4a3c;
+    }
+    .big {
+      font-size: 36px;
+      font-weight: 700;
+      letter-spacing: 1px;
+    }
+    .muted {
+      color: var(--muted);
+    }
+    .btn {
+      border: none;
+      border-radius: 12px;
+      padding: 12px 16px;
+      font-size: 16px;
+      cursor: pointer;
+      background: var(--accent);
+      color: #fff;
+      box-shadow: 0 6px 18px rgba(200, 75, 49, 0.25);
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    .btn:hover { transform: translateY(-1px); box-shadow: 0 10px 22px rgba(200, 75, 49, 0.3); }
+    .btn.secondary {
+      background: #e7d6c2;
+      color: #4c3f33;
+      box-shadow: none;
+    }
+    .btn.good {
+      background: var(--accent-2);
+      box-shadow: 0 6px 18px rgba(42, 157, 143, 0.25);
+    }
+    .grid {
+      display: grid;
+      gap: 14px;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    }
+    .history {
+      max-height: 320px;
+      overflow: auto;
+      border: 1px dashed var(--line);
+      border-radius: 12px;
+      padding: 10px 12px;
+      background: #fffdf8;
+    }
+    .history ul { margin: 0; padding-left: 18px; }
+    .history li { margin: 6px 0; }
+    .banner {
+      display: none;
+      padding: 12px 14px;
+      border-radius: 12px;
+      background: #ffe7db;
+      border: 1px solid #f6c9b5;
+      color: #7a2e1f;
+      font-weight: 600;
+    }
+    .banner.show { display: block; }
+    .foot {
+      margin-top: 16px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    .notice {
+      font-size: 13px;
+      color: #7b6a5b;
+      background: #f7efe3;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+    }
+    @media (max-width: 520px) {
+      .big { font-size: 30px; }
+      h1 { font-size: 24px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>每日吃药提醒</h1>
+      <div class="sub">每天中午 12:00 提醒 · 点一下“已吃”就会记录到历史</div>
+    </header>
+
+    <div class="panel">
+      <div id="reminder" class="banner">提醒：今天中午的药还没记录，记得吃完点“已吃”。</div>
+
+      <div class="row">
+        <div class="tag" id="todayTag">今天</div>
+        <div class="big" id="statusText">尚未记录</div>
+      </div>
+
+      <div class="row">
+        <button class="btn good" id="markBtn">已吃</button>
+        <button class="btn secondary" id="undoBtn">撤销今天记录</button>
+        <button class="btn secondary" id="testBtn">测试提醒</button>
+      </div>
+
+      <div class="grid">
+        <div>
+          <div class="muted">今天记录时间</div>
+          <div id="timeText">—</div>
+        </div>
+        <div>
+          <div class="muted">提醒时间</div>
+          <div>每天 12:00</div>
+        </div>
+        <div>
+          <div class="muted">历史记录（最近 30 天）</div>
+          <div class="history" id="historyBox">
+            <ul id="historyList"></ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="notice">
+        小提示：建议把本页面收藏到微信里（或添加到手机桌面）。提醒是页面打开时自动触发的。
+      </div>
+    </div>
+
+    <div class="foot">
+      数据仅保存在本机浏览器里，不会上传。
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = "med_reminder_records_v1";
+
+    function pad(n) { return String(n).padStart(2, "0"); }
+    function formatDate(d) {
+      return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+    }
+    function formatTime(d) {
+      return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    }
+    function loadRecords() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        return raw ? JSON.parse(raw) : {};
+      } catch (e) {
+        return {};
+      }
+    }
+    function saveRecords(records) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+    }
+
+    const statusText = document.getElementById("statusText");
+    const timeText = document.getElementById("timeText");
+    const historyList = document.getElementById("historyList");
+    const reminder = document.getElementById("reminder");
+
+    function updateUI() {
+      const records = loadRecords();
+      const today = new Date();
+      const todayKey = formatDate(today);
+      const todayRecord = records[todayKey];
+
+      document.getElementById("todayTag").textContent = `今天 ${todayKey}`;
+
+      if (todayRecord) {
+        statusText.textContent = "已记录";
+        timeText.textContent = todayRecord.time;
+      } else {
+        statusText.textContent = "尚未记录";
+        timeText.textContent = "—";
+      }
+
+      const keys = Object.keys(records).sort().reverse().slice(0, 30);
+      historyList.innerHTML = "";
+      if (keys.length === 0) {
+        const li = document.createElement("li");
+        li.textContent = "暂无记录";
+        historyList.appendChild(li);
+      } else {
+        keys.forEach(k => {
+          const li = document.createElement("li");
+          li.textContent = `${k}  已吃（${records[k].time}）`;
+          historyList.appendChild(li);
+        });
+      }
+    }
+
+    function markToday() {
+      const records = loadRecords();
+      const now = new Date();
+      const key = formatDate(now);
+      records[key] = { time: formatTime(now) };
+      saveRecords(records);
+      updateUI();
+    }
+
+    function undoToday() {
+      const records = loadRecords();
+      const key = formatDate(new Date());
+      if (records[key]) {
+        delete records[key];
+        saveRecords(records);
+      }
+      updateUI();
+    }
+
+    function shouldRemindNow() {
+      const records = loadRecords();
+      const now = new Date();
+      const key = formatDate(now);
+      if (records[key]) return false;
+      const hour = now.getHours();
+      const min = now.getMinutes();
+      return hour > 12 || (hour === 12 && min >= 0);
+    }
+
+    function showReminder() {
+      reminder.classList.add("show");
+      // 尝试触发震动（部分手机/微信可能不支持）
+      if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+    }
+
+    function hideReminder() {
+      reminder.classList.remove("show");
+    }
+
+    function checkReminderLoop() {
+      if (shouldRemindNow()) {
+        showReminder();
+      } else {
+        hideReminder();
+      }
+    }
+
+    document.getElementById("markBtn").addEventListener("click", () => {
+      markToday();
+      hideReminder();
+    });
+    document.getElementById("undoBtn").addEventListener("click", () => {
+      undoToday();
+      checkReminderLoop();
+    });
+    document.getElementById("testBtn").addEventListener("click", () => {
+      showReminder();
+      setTimeout(hideReminder, 5000);
+    });
+
+    updateUI();
+    checkReminderLoop();
+    setInterval(() => {
+      updateUI();
+      checkReminderLoop();
+    }, 60 * 1000);
+  </script>
+</body>
+</html>
